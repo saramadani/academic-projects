@@ -1,0 +1,308 @@
+---
+title: "Compte-Rendu Atelier Statistique"
+author: "Sarra MADANI et Moncef KCHIR"
+date: "Lundi 2 mai 2016"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+<h3> I Exploration des données : </h3>
+
+*Importation de la base*
+
+```{r}
+data<-read.table(file=file.choose(), sep=";", header=T, dec=",")
+```
+<p> On dispose d'un jeu de données formé de 12 juges , 2 séances , 8 biscuits et 23 descripteurs .
+Les juges vont déguster les 8 produits pendant 2 séances différentes et donner des notes comprises entre 0 et 10 selon les descripteurs . </p>
+
+<h3> II Etude descriptive : </h3>
+
+<p> En utilisant la commande "summary", nous avons une présentation générale des différentes variables, leurs maxima, minima et les quartiles dans le cas où elles sont quantitatives et leurs différentes valeurs si elles sont qualitatives. </p>
+
+```{r}
+summary(data)
+```
+
+**1.Nature des variable**
+
+```{r}
+str(data)
+```
+
+<p> La nature des variables "juge" et "seance" doit être modifiée en utilisant la commande as.factor </p>
+
+```{r}
+data$seance<-as.factor(data$seance) 
+data$juge<-as.factor(data$juge) 
+```
+
+
+```{r}
+names(which.max(table(data$ocitron)))
+```
+<p> La note la plus récurrente pour la variable "Gcitron" (qui désigne le goût citron) vaut zéro, probablement parce que les juges n'ont pas apprécié ce goût-là ou qu'il était peut-être carrément absent de la plupart des produits </p>
+```{r}
+names(which.max(table(data$Gsucré)))
+
+```
+<p> Contrairement au goût sucré où le mode vaut  6 : cela veut dire que les juges l'ont apprécié ou du moins qu'ils l'ont bien ressenti... </p>
+
+
+**2.Visualisation des différences entre juges, séances et produits**
+<h4> Effet juge </h4>
+```{r}
+library(ggplot2)
+p<-ggplot(data, aes(x=data$juge, y=data$Olait))
+p1=p+geom_boxplot()
+p1
+```
+<p> Effet juge : on constate que les juges notent différemment la variable "Odeur lait" ; la perception diffère d'un individu à un autre. </p>
+
+
+<h4> Effet produit </h4>
+```{r}
+q1<-ggplot(data, aes(x=data$produit, y=data$Olait))+geom_boxplot()
+q1
+```
+<p> Les notes reçues, suivant la variables "Odeur lait", par les différents produits chacun pris seul (effet produit) sont plus ou moins semblables.. </p>
+```{r}
+k<-ggplot(data, aes(x=data$produit, y=data$Gsucré))
+k1=k+geom_boxplot()
+k1
+```
+<p> Alors que pour la variable "Goût sucré", on remarque clairement que le produit P3 est plus sucré que le reste des produits.
+les produits Français se ressemblent alors que les Pakistannais se distinguent .
+Puisque les écarts interquartiles sont très différents d'un produit à un autre,on peut conclure que les produits présentent des différences significatives . </p>
+
+
+<h4> Effet seance </h4>
+```{r}
+l<-ggplot(data, aes(x=data$seance, y=data$Gsucré))
+l1=l+geom_boxplot()
+l1
+```
+<p> Effet seance : On mesure, grâce à l'effet séance, la répétabilité des juges entre les deux, on remarque ici que cet effet ne l'emporte pas. </p>
+
+
+
+<p> On fait appel ici au package "gridExtra" pour utiliser la commande grid.arrange qui nous permet de mettre les quatre plots sur un même graphique afin de faciliter la comréhension des graphes. </p>
+
+```{r}
+library(gridExtra)
+grid.arrange(p1,q1,k1,l1)
+```
+
+
+
+<p>   Pour le reste du notre travail,nous allons nous concentrer sur l'étude de l'effet produit .
+On distingue alors quatres tables selon les senses. </p>
+
+<h4> 1.La vision </h4>
+```{r}
+library(reshape2)
+data.long1=melt(data[,-c(1)],c("juge","produit"),measure.vars=(3:4))
+```
+
+<h4> 2.L'odorat </h4>
+```{r}
+data.long2=melt(data[,-c(1)],c("juge","produit"),measure.vars=(5:10))
+```
+
+<h4>3.Le toucher </h4>
+```{r}
+data.long3=melt(data[,-c(1)],c("juge","produit"),measure.vars=(11:17))
+```
+
+<h4> 4.Le gout </h4>
+```{r}
+data.long4=melt(data[,-c(1)],c("juge","produit"),measure.vars=(18:25))
+```
+
+
+###Les boxplots###
+ 
+<h4>1.La vision </h4>
+
+```{r}
+a=ggplot(data.long1,aes(x=produit,y=value,colour=produit))+geom_boxplot()+geom_jitter()+facet_wrap(~variable)
+plot(a)
+```
+<p> On peut conclure  que le produit F2 a la couleur la plus appréciable . Alors que le produit F3 a eu des notes < 4 . Donc ,ce dernier n'a pas une bonne couleur
+On a Le produit F4 est le plus acceptable ,il est moins dispersif et ayant une médiane égale 9.5 contrairement à F1. </p>
+
+<h4> 2.L'odorat </h4>
+```{r}
+b=ggplot(data.long2,aes(x=produit,y=value,colour=produit))+geom_boxplot()+geom_jitter()+facet_wrap(~variable)
+plot(b) 
+```
+<p> On observe que les odeurs des produits n'étaient pas acceptables puisque la majorité des médianes sont inférieures à 5 .Prenons l'exemple du descripteur Ocitron qui a une moyenne des notes presque nulle .Pour le descripteur Olait il est clair que les produits français se ressemblent. </p>
+
+
+<h4> 3.Le toucher </h4>
+```{r}
+c=ggplot(data.long3,aes(x=produit,y=value,colour=produit))+geom_boxplot()+geom_jitter()+facet_wrap(~variable)
+plot(c)
+```
+<p> Il est clair que le produit F4 est le plus appréciable pour ces descripteurs par contre le produit P1 a été déprécié pour les descripteurs Tgranusabl,Tfarineux et Tfondant. </p>
+
+<h4> 4.Le gout </h4>
+```{r}
+d=ggplot(data.long4,aes(x=produit,y=value,colour=produit))+geom_boxplot()+geom_jitter()+facet_wrap(~variable)
+plot(d)
+```
+<p> Le gout sucré était acceptable pour tous les produits , ceci est  expliqué par des médianes supérieures à 6 .Par contre  les gouts citron et caramel étaient dévalués. </p>
+
+
+**3.Résumé des données par variables**
+
+```{r}
+library(plyr)
+Resume<-ddply(data, c("produit"), summarize, Moyenne=mean(Vcouleur, na.rm = T), "Ecart-type"=sd(Vcouleur, na.rm = T))
+Resume<-format(Resume, digits=3, decimal.mark=",") 
+Resume
+```
+
+
+```{r}
+Var_quant<-data[,-c(1,2,3)]
+Var_quant=na.omit(Var_quant)
+call=do.call(data.frame,list(mean=apply(Var_quant,2,mean),sd=apply(Var_quant,2,sd),median=apply(Var_quant,2,median),min=apply(Var_quant,2,min),n=apply(Var_quant,2,length)))
+call
+Var_quali<-data[,1:3]
+Var_quali
+```
+
+<p> Nous avons construit un tableau qui il contient les moyennnes des notes attiribué par les juges pour chaque produit.Egalement On note que le prduit F2 est le produit qui a une moyenne des notes égale à 9.12 donc les juges ont apprécié ce produit selon tous les descripteurs contrairement au produit P1 qui admet une moyenne égale à 3.54 </p>
+
+<p> En utilisant le tableau moyen on obtient : </p>
+```{r}
+library(survival)
+library(doBy)
+Tableau_moyen=summaryBy(.~produit,data,FUN = c(mean),na.rm=TRUE,keep.names = TRUE)
+origine=c(rep("France",4),rep("Pakistan",4))
+origine
+Tableau_moyen_originaire=cbind.data.frame(Tableau_moyen,origine,row.names=1)
+Tableau_moyen_originaire
+```
+
+ <h3> III-Analyse multivariée : </h3>
+
+```{r}
+library(FactoMineR)
+dim(Tableau_moyen_originaire)
+res.pca=PCA(Tableau_moyen_originaire,scale.unit=T, ncp=2,quali.sup=24, graph=T)
+
+```
+<p> D'après cette analyse en composantes principales on peut tirer les résultats suivants:
+  P3 est le produit le plus sucré puisqu'il est caractèrisé  par un goût caramel , goût vanille et Ocaramel appréciables .De même pour le produit F2
+Ensuite le produit F4 est caractérisé par un goût salé , goût beurre et goût Ooeuf de valeur .
+Puis le produit F3 et P4 se privilégient par leur bonne patte: Tpâteux,Tfarineux et Tfondant acceptables. </p>
+
+```{r}
+res.pca
+res.pca$eig
+res.pca $var
+res.pca$ind
+res.pca$svd
+res.pca$quali.sup
+res.pca$call
+res.pca$var$coord
+res.pca$var$cos2
+names(res.pca)
+plot(res.pca,choix = "ind" ,axes = 1:2)
+```
+
+```{r}
+library(ggplot2)
+library(grid)
+library(factoextra)
+fviz_pca_ind(res.pca,geom=c("point","text"),col.ind="cos2")+scale_color_gradient2(low='green',mid='red',high='blue',midpoint=0.4)
+```
+
+```{r}
+library(googleVis)
+line=gvisLineChart(Tableau_moyen_originaire,xvar='origine',yvar=c("Vcouleur","Gcitron"))
+plot(line)
+```
+[Line] (http://127.0.0.1:26473/custom/googleVis/LineChartID183051cf133e.html)
+
+<p> Pour ces linecharts on a le produit F4 est le plus plus préféré par les juges .En effet, la note attribuée au descripteur Vepaisseur est égale à 9.08 . </p>
+```{r}
+bubble=gvisBubbleChart(Tableau_moyen,idvar ='produit',xvar = 'Gcitron',yvar = 'Vcouleur')
+plot(bubble)
+```
+[Bubble] (http://127.0.0.1:26473/custom/googleVis/BubbleChartID1830c7f1d42.html)
+<p> Le premier bubblechart nous présente un plan constitué d'un axe des abcisses croissant en Ocaramel et un axe des ordonnées croissant en Ocitron c'est à dire plus la valeur des abcisses est élevée , plus le descripteur Ocaramel s'approche de 10 et inversement. </p>
+```{r}
+Bar<-gvisBarChart(Tableau_moyen, yvar=c("Vcouleur","Gcitron"))
+plot(Bar)
+```
+ 
+[Bar] (http://127.0.0.1:26473/custom/googleVis/BarChartID18305110296.html)
+```{r}
+library(plotly)
+p<-plot_ly(data=Tableau_moyen_originaire,x=Vcouleur,color=origine,type="box")
+p
+```
+
+```{r}
+plot(res.pca,choix = "ind" ,axes = 1:2)
+```
+
+```{r}
+library(ggplot2)
+library(factoextra)
+library(googleVis)
+library(doBy)
+library(survival)
+library(googleVis)
+
+```
+
+
+```{r}
+fviz_contrib(res.pca , choice = "var", axes = 1)
+```
+
+```{r}
+fviz_contrib(res.pca, choice = "var", axes = 2)
+```
+
+
+
+```{r}
+library(plotly) 
+bubble1=gvisBubbleChart(data,idvar ='juge',xvar = 'Gcitron',yvar = 'Vcouleur',colorvar='produit',sizevar='seance',options=list(hAxis='{minvalue:1,maxvalue:10}',width=1000,height=1000))
+plot(bubble1)
+```
+[Bubble1] (http://127.0.0.1:26473/custom/googleVis/BubbleChartID18304969670f.html)
+ 
+ 
+
+<h3>IV Cartographie </h3>
+
+```{r}
+Tableau_cons<-read.table(file=file.choose(),header=T, sep=";")
+Tableau_cart=cbind.data.frame(Tableau_cons,Tableau_moyen_originaire,row.names=1)
+rownames(Tableau_cart)<-Tableau_cons[,1]
+dim(Tableau_cart)
+dim(Tableau_moyen)
+Tableau_cart[,318]
+Tableau_cart[,295]
+library(FactoMineR)
+res.pca<-PCA(Tableau_cart, quanti.sup = 295:317,quali.sup = 318)
+plotP<-plot.PCA(res.pca, choix = "var", invisible = "var")
+library(gridExtra)
+```
+
+```{r}
+library(devtools)
+p1<-fviz_pca_var(res.pca, invisible = "var")
+p2<-fviz_pca_ind(res.pca)
+p3<-fviz_pca_var(res.pca)
+grid.arrange(p2, p3, p1, nrow=2, ncol = 2)
+```
