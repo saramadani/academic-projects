@@ -1,0 +1,70 @@
+---
+title: "projet Monte Carlo"
+author: "Madani SARRA"
+date: "5 mai 2017"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+On commence par l'initialisation des donn?es
+
+```{r}
+temps = seq(0,1,length=11)
+pas.temps = 1/10
+sigma=1/2
+delta=0.1
+```
+
+methode de Monte Carlo classique : 
+Simulation de la Question 1
+
+```{r}
+B.acc = matrix(rnorm((10)*1000000,sd=sqrt(pas.temps)),nrow=1000000)
+classic<-matrix(nrow=1000000,ncol=12)
+classic[,1]=0
+for (i in 1:10) {classic[,i+1]=classic[,i]+delta*(0.1*(sqrt(exp(classic[,i]))-1)-1/8)+sigma*(B.acc[,i])}
+classic[,12]=pmax(exp(classic[,11])-1,0)
+x=mean(classic[,12])
+x
+
+```
+Initialiser la matrice qui contient les accroissements browniens
+```{r}
+WT<-matrix(nrow=1000000,ncol=3)
+WT[,1]=(B.acc[,1])+(B.acc[,2])+(B.acc[,3])+(B.acc[,4])+(B.acc[,5])+(B.acc[,6])+(B.acc[,7])+(B.acc[,8])+(B.acc[,9])+(B.acc[,10])
+WT[,2]=sigma*(WT[,1])
+```
+M?thode de la variable antith?tique:
+Simulation Question 2 
+```{r}
+B = matrix(rnorm((10)*1000000,sd=sqrt(pas.temps)),nrow=1000000)
+B.neg<-matrix(nrow=1000000,ncol=10)
+for (i in 1:10) {B.neg[,i]=-B.acc[,i]}
+ant<-matrix(nrow=1000000,ncol=24)
+ant[,1]=0
+for (i in 1:10) {ant[,i+1]=ant[,i]+delta*(0.1*(sqrt(exp(ant[,i]))-1)-1/8)+sigma*(B[,i])}
+ant[,12]=pmax(exp(ant[,11])-1,0)
+ant[,13]=0
+for (i in 13:22) {ant[,i+1]=ant[,i]+delta*(0.1*(sqrt(exp(ant[,i]))-1)-1/8)+sigma*(B.neg[,i-12])}
+ant[,24]=pmax(exp(ant[,23])-1,0)
+y=mean((ant[,24]+ant[,12])/2)
+y
+```
+determination m=E[g(X~)]
+```{r}
+f <- function(x) {(1/sqrt(2*pi))*exp(0.0005)*exp(-x^2)/2}
+integrate(f, lower = -Inf, upper = 0.5)
+```
+M?thode de la variable de controle: 
+Simulation de la question 3
+```{r}
+WT[,3]=pmax(exp(WT[,2])-1,0)
+g=mean(WT[,3])
+b=mean((classic[,12]-x)*(WT[,3]-g))/mean((WT[,3]-g)^2)
+vc1=mean(classic[,12]-b*(WT[,3]-0.28))
+vc1
+```
+
