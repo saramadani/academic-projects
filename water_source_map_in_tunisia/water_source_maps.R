@@ -1,7 +1,7 @@
 ##Tunisie Telecom base##
-menages_selon_source_d_eau <- read.csv("/home/saara/Downloads/menages selon source d'eau.csv")
-View(menages_selon_source_d_eau)
-data=menages_selon_source_d_eau
+water_source <- read.csv("/home/saara/Downloads/water_source_tunisia.csv")
+View(water_source)
+data=water_source
 attach(data)
 Regions=as.character(Regions)
 Nombre.menages=as.numeric(Nombre.menages)
